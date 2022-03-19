@@ -1,11 +1,8 @@
-from django.shortcuts import render
-
 # Create your views here.
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-
 
 from .serializers import (
     UserRegistrationSerializer,
@@ -14,7 +11,11 @@ from .serializers import (
     AppointmentListSerializer,
 )
 
-from .models import User, Appointment
+from .models import (
+    User, 
+    Appointment,
+)
+from api import serializers
 
 
 class AuthUserRegistrationView(APIView):
@@ -23,6 +24,7 @@ class AuthUserRegistrationView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
+        print("requested data =", request.data)
         valid = serializer.is_valid(raise_exception=True)
 
         if valid:
@@ -99,17 +101,22 @@ class AppointmentListView(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def get(self, request):
+        print("Entering view get request")
         appointments = Appointment.objects.all()
+        serializer = self.serializer_class(appointments, many=True)
+        status_code = status.HTTP_200_OK
+
         response = {
                 'success': True,
-                'status_code': status.HTTP_200_OK,
+                'status_code': status_code,
                 'message': 'Successfully fetched appointments',
-                'users': appointments
-
-            }
-        return Response(response, status=status.HTTP_200_OK)
+                'appointments': serializer.data
+        }
+        return Response(response, status=status_code)
 
     def post(self, request):
+        print("Entering views post request")
+
         serializer = self.serializer_class(data=request.data)
         valid = serializer.is_valid(raise_exception=True)
 
@@ -117,13 +124,12 @@ class AppointmentListView(APIView):
             serializer.save()
             status_code = status.HTTP_201_CREATED
 
-            print(request)
 
             response = {
                 'success': True,
                 'statusCode': status_code,
                 'message': 'Appointment successfully registered!',
-                'user': serializer.data
+                'appointment': serializer.data
             }
 
             return Response(response, status=status_code)
