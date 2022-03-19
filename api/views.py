@@ -10,10 +10,11 @@ from rest_framework import permissions
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
-    UserListSerializer
+    UserListSerializer,
+    AppointmentListSerializer,
 )
 
-from .models import User
+from .models import User, Appointment
 
 
 class AuthUserRegistrationView(APIView):
@@ -64,25 +65,65 @@ class AuthUserLoginView(APIView):
 
 class UserListView(APIView):
     serializer_class = UserListSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
+
         if user.role != 1:
+            users = User.objects.all().filter(role=2)
+            serializer = self.serializer_class(users, many=True)
             response = {
-                'success': False,
-                'status_code': status.HTTP_403_FORBIDDEN,
-                'message': 'You are not authorized to perform this action'
+                'success': True,
+                'status_code': status.HTTP_200_OK,
+                'message': 'Successfully fetched doctors',
+                'users': serializer.data
+
             }
-            return Response(response, status.HTTP_403_FORBIDDEN)
+            return Response(response, status=status.HTTP_200_OK)
+            
         else:
             users = User.objects.all()
             serializer = self.serializer_class(users, many=True)
             response = {
                 'success': True,
                 'status_code': status.HTTP_200_OK,
-                'message': 'Successfully fetched users',
+                'message': 'Successfully fetched all users',
                 'users': serializer.data
 
             }
             return Response(response, status=status.HTTP_200_OK)
+
+class AppointmentListView(APIView):
+    serializer_class = AppointmentListSerializer
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        appointments = Appointment.objects.all()
+        response = {
+                'success': True,
+                'status_code': status.HTTP_200_OK,
+                'message': 'Successfully fetched appointments',
+                'users': appointments
+
+            }
+        return Response(response, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        valid = serializer.is_valid(raise_exception=True)
+
+        if valid:
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+
+            print(request)
+
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'Appointment successfully registered!',
+                'user': serializer.data
+            }
+
+            return Response(response, status=status_code)

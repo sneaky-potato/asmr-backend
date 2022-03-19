@@ -1,4 +1,5 @@
-from .models import User
+from email.policy import default
+from .models import User, Appointment
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -63,6 +64,32 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            'id',
+            'uid',
             'email',
             'role'
         )
+
+class AppointmentListSerializer(serializers.ModelSerializer):
+    # doctor = serializers.PrimaryKeyRelatedField(read_only=True)
+    # patient = serializers.PrimaryKeyRelatedField(read_only=True)
+    doctor_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    patient_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    description = serializers.CharField(max_length=100)
+
+
+    class Meta:
+        model = Appointment
+        fields = (
+            'id', 
+            'doctor_id', 
+            'patient_id', 
+            'description',
+        )
+
+    def create(self, validated_data):
+        # doctor_key = validated_data.pop("doctor")
+        # patient_key = validated_data.pop("patient")
+        print(validated_data)
+        appointment = Appointment.objects.create(**validated_data)
+        return appointment

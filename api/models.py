@@ -48,3 +48,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class Appointment(models.Model):
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor')
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient')
+    description = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.description
