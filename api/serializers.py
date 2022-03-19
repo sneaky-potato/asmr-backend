@@ -1,9 +1,13 @@
-from email.policy import default
-from .models import User, Appointment
+from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+
+from .models import (
+    User, 
+    Appointment,
+)
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,6 +20,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     # Fucking important
     def create(self, validated_data):
+        print("Entering serializer create request")
+        print("validated data =", validated_data)
         auth_user = User.objects.create_user(**validated_data)
         return auth_user
 
@@ -71,25 +77,22 @@ class UserListSerializer(serializers.ModelSerializer):
         )
 
 class AppointmentListSerializer(serializers.ModelSerializer):
-    # doctor = serializers.PrimaryKeyRelatedField(read_only=True)
-    # patient = serializers.PrimaryKeyRelatedField(read_only=True)
-    doctor_id = serializers.PrimaryKeyRelatedField(read_only=True)
-    patient_id = serializers.PrimaryKeyRelatedField(read_only=True)
-    description = serializers.CharField(max_length=100)
 
+    doctor_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all().filter(role=2), read_only=False)
+    patient_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all().filter(role=3), read_only=False)
 
     class Meta:
         model = Appointment
         fields = (
-            'id', 
+            'id',
             'doctor_id', 
             'patient_id', 
             'description',
+            'status',
         )
 
     def create(self, validated_data):
-        # doctor_key = validated_data.pop("doctor")
-        # patient_key = validated_data.pop("patient")
-        print(validated_data)
-        appointment = Appointment.objects.create(**validated_data)
+        print("Entering serializer create request")
+        print("validated data =", validated_data)
+        appointment = Appointment.objects.create(doctor=validated_data['doctor_id'], patient=validated_data['patient_id'], description=validated_data['description'], status=validated_data['status'])
         return appointment
