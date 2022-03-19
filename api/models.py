@@ -50,9 +50,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class Appointment(models.Model):
+
+    DONE = 1
+    PENDING = 2
+
+    STATUS_CHOICES = (
+        (DONE, 'done'),
+        (PENDING, 'pending'),
+    )
+
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor')
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient')
     description = models.CharField(max_length=100)
+    status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, blank=True, null=True, default=2)
 
     def __str__(self):
         return self.description
