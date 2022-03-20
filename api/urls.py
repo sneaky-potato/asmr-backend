@@ -15,4 +15,6 @@ urlpatterns = [
     path('login', AuthUserLoginView.as_view(), name='login'),
     path('users', UserListView.as_view(), name='users'),
     path('appointments', AppointmentListView.as_view(), name='appointments'),
+    path('appointments/<int:pk>/', AppointmentListView.as_view(), name='app'),
+
 ]

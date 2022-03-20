@@ -1,8 +1,10 @@
 # Create your views here.
+import code
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
+from rest_framework import exceptions
 
 from .serializers import (
     UserRegistrationSerializer,
@@ -98,7 +100,7 @@ class UserListView(APIView):
 
 class AppointmentListView(APIView):
     serializer_class = AppointmentListSerializer
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request):
         print("Entering view get request")
@@ -133,3 +135,27 @@ class AppointmentListView(APIView):
             }
 
             return Response(response, status=status_code)
+
+    def put(self, request, pk):
+        print("Entering put request")
+        try:
+            appointment = Appointment.objects.get(pk=pk)
+        except Appointment.DoesNotExist:
+            raise exceptions.NotFound("Appointment does not exist", code=status.HTTP_404_NOT_FOUND)
+        
+        serializer = self.serializer_class(appointment, data=request.data)
+        valid = serializer.is_valid(raise_exception=True)
+
+        if valid:
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'Appointment successfully edited',
+                'appointment': serializer.data
+            }
+
+            return Response(response, status=status_code)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
