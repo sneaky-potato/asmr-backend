@@ -1,5 +1,4 @@
 # Create your views here.
-import code
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,16 +8,17 @@ from rest_framework import exceptions
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
+    UserUpdateSerializer,
     UserListSerializer,
+    HospitalListSerializer,
     AppointmentListSerializer,
 )
 
 from .models import (
     User, 
     Appointment,
+    Hospital,
 )
-from api import serializers
-
 
 class AuthUserRegistrationView(APIView):
     serializer_class = UserRegistrationSerializer
@@ -67,6 +67,35 @@ class AuthUserLoginView(APIView):
 
             return Response(response, status=status_code)
 
+class UserUpdateView(APIView):
+    serializer_class = UserUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, pk):
+        print("Entering views put request")
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise exceptions.NotFound("User does not exist", code=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(user, data=request.data)
+        valid = serializer.is_valid(raise_exception=True)
+
+        if valid:
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'Appointment successfully edited',
+                'appointment': serializer.data
+            }
+
+            return Response(response, status=status_code)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserListView(APIView):
     serializer_class = UserListSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -97,6 +126,44 @@ class UserListView(APIView):
 
             }
             return Response(response, status=status.HTTP_200_OK)
+
+class HospitalListView(APIView):
+    serializer_class = HospitalListSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+    def get(self, request):
+        hospitals = Hospital.objects.all()
+        serializer = self.serializer_class(hospitals, many=True)
+        response = {
+            'success': True,
+            'status_code': status.HTTP_200_OK,
+            'message': 'Successfully fetched hospitals',
+            'users': serializer.data
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    # permission_classes = (permissions.IsAuthenticated, )
+
+    def post(self, request):
+        print("Entering views post request")
+
+        serializer = self.serializer_class(data=request.data)
+        valid = serializer.is_valid(raise_exception=True)
+
+        if valid:
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+
+
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'Hospital successfully registered!',
+                'appointment': serializer.data
+            }
+
+            return Response(response, status=status_code)
+
 
 class AppointmentListView(APIView):
     serializer_class = AppointmentListSerializer
@@ -137,7 +204,12 @@ class AppointmentListView(APIView):
             return Response(response, status=status_code)
 
     def put(self, request, pk):
-        print("Entering put request")
+        print("Entering views put request")
+        user = request.user
+
+        if user.role == 3:
+            return Response("You do not have the permission to edit an appointment", status=status.HTTP_401_UNAUTHORIZED)
+        
         try:
             appointment = Appointment.objects.get(pk=pk)
         except Appointment.DoesNotExist:
