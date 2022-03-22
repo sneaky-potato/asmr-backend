@@ -1,3 +1,4 @@
+from dataclasses import field
 from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -7,6 +8,7 @@ from django.contrib.auth.models import update_last_login
 from .models import (
     User, 
     Appointment,
+    Hospital,
 )
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -64,8 +66,6 @@ class UserLoginSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid login credentials")
 
-
-
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -75,6 +75,24 @@ class UserListSerializer(serializers.ModelSerializer):
             'email',
             'role'
         )
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'email',
+        )
+
+class HospitalListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hospital
+        fields = (
+            'id',
+            'name', 
+            'address', 
+            'pincode',
+        )
+
 
 class AppointmentListSerializer(serializers.ModelSerializer):
 
