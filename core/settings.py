@@ -57,8 +57,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# ROOT_URLCONF = 'core.urls'
-
 ROOT_URLCONF = 'core.urls'
 
 # REST framework settings
@@ -114,12 +112,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 dbname = os.getenv("DATABASE_NAME")
 dbuser = os.getenv("DATABASE_USER")
@@ -127,16 +125,16 @@ dbpasswd = os.getenv("DATABASE_PASSWORD")
 dbhost = os.getenv("DATABASE_HOST")
 dbport = os.getenv("DATABASE_PORT")
 
-DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.postgresql',
-       'NAME': dbname,
-       'USER': dbuser,
-       'PASSWORD': dbpasswd,
-       'HOST': dbhost,
-       'PORT': dbport,
-   }
-}
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': dbname,
+#        'USER': dbuser,
+#        'PASSWORD': dbpasswd,
+#        'HOST': dbhost,
+#        'PORT': dbport,
+#    }
+# }
 
 
 # Password validation
