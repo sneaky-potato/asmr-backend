@@ -71,16 +71,8 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id',
-            'uid',
             'email',
             'role'
-        )
-
-class UserUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'email',
         )
 
 class HospitalListSerializer(serializers.ModelSerializer):
@@ -92,7 +84,6 @@ class HospitalListSerializer(serializers.ModelSerializer):
             'address', 
             'pincode',
         )
-
 
 class AppointmentListSerializer(serializers.ModelSerializer):
 
