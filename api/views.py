@@ -5,10 +5,13 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import exceptions
 
+from .permissions import (
+    IsAuthenticatedOrPostOnly,
+)
+
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
-    UserUpdateSerializer,
     UserListSerializer,
     HospitalListSerializer,
     AppointmentListSerializer,
@@ -44,7 +47,7 @@ class AuthUserRegistrationView(APIView):
 
 class AuthUserLoginView(APIView):
     serializer_class = UserLoginSerializer
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (IsAuthenticatedOrPostOnly, )
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -65,36 +68,7 @@ class AuthUserLoginView(APIView):
                 }
             }
 
-            return Response(response, status=status_code)
-
-class UserUpdateView(APIView):
-    serializer_class = UserUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def put(self, request, pk):
-        print("Entering views put request")
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            raise exceptions.NotFound("User does not exist", code=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.serializer_class(user, data=request.data)
-        valid = serializer.is_valid(raise_exception=True)
-
-        if valid:
-            serializer.save()
-            status_code = status.HTTP_201_CREATED
-
-            response = {
-                'success': True,
-                'statusCode': status_code,
-                'message': 'Appointment successfully edited',
-                'appointment': serializer.data
-            }
-
-            return Response(response, status=status_code)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(response, status=status_code)    
 
 class UserListView(APIView):
     serializer_class = UserListSerializer
@@ -127,6 +101,31 @@ class UserListView(APIView):
             }
             return Response(response, status=status.HTTP_200_OK)
 
+    def put(self, request, pk):
+        print("Entering views put request")
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise exceptions.NotFound("User does not exist", code=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(user, data=request.data)
+        valid = serializer.is_valid(raise_exception=True)
+
+        if valid:
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'User successfully edited',
+                'appointment': serializer.data
+            }
+
+            return Response(response, status=status_code)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class HospitalListView(APIView):
     serializer_class = HospitalListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
@@ -141,8 +140,6 @@ class HospitalListView(APIView):
             'users': serializer.data
         }
         return Response(response, status=status.HTTP_200_OK)
-
-    # permission_classes = (permissions.IsAuthenticated, )
 
     def post(self, request):
         print("Entering views post request")
