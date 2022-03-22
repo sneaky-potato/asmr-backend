@@ -49,6 +49,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+class Hospital(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=200)
+    pincode = models.CharField(max_length=6)
+
+    def __str__(self):
+        return self.name
+
 class Appointment(models.Model):
 
     DONE = 1
