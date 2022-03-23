@@ -11,6 +11,8 @@ from .permissions import (
 
 from .serializers import (
     UserRegistrationSerializer,
+    UserDoctorSerializer,
+    UserPatientSerializer,
     UserLoginSerializer,
     UserListSerializer,
     HospitalListSerializer,
@@ -28,10 +30,20 @@ class AuthUserRegistrationView(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        print("requested data =", request.data)
-        valid = serializer.is_valid(raise_exception=True)
+        role = request.data['role']
+        if(role == 3):
+            serializer = UserPatientSerializer(data=request.data)
 
+        elif(role == 2):
+            request.data['is_active'] = False
+            serializer = UserDoctorSerializer(data=request.data)
+        else:
+            serializer = UserRegistrationSerializer(data=request.data)
+
+        print("requested data =", request.data)
+
+        valid = serializer.is_valid(raise_exception=True)
+        print("request is =", valid)
         if valid:
             serializer.save()
             status_code = status.HTTP_201_CREATED
@@ -110,7 +122,7 @@ class UserListView(APIView):
 
         serializer = self.serializer_class(user, data=request.data)
         valid = serializer.is_valid(raise_exception=True)
-
+        print("request is =", valid)
         if valid:
             serializer.save()
             status_code = status.HTTP_201_CREATED
@@ -119,7 +131,7 @@ class UserListView(APIView):
                 'success': True,
                 'statusCode': status_code,
                 'message': 'User successfully edited',
-                'appointment': serializer.data
+                'user': serializer.data
             }
 
             return Response(response, status=status_code)
@@ -137,7 +149,7 @@ class HospitalListView(APIView):
             'success': True,
             'status_code': status.HTTP_200_OK,
             'message': 'Successfully fetched hospitals',
-            'users': serializer.data
+            'hospitals': serializer.data
         }
         return Response(response, status=status.HTTP_200_OK)
 

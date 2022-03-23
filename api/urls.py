@@ -7,7 +7,7 @@ from .views import (
     UserListView,
     HospitalListView,
     AppointmentListView,
-)
+)   
 
 urlpatterns = [
     path('token/obtain/', jwt_views.TokenObtainPairView.as_view(), name='token_create'),
