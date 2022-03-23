@@ -1,5 +1,4 @@
-from dataclasses import field
-from unittest.util import _MAX_LENGTH
+from email.policy import default
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -26,6 +25,40 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         print("validated data =", validated_data)
         auth_user = User.objects.create_user(**validated_data)
         return auth_user
+
+class UserDoctorSerializer(UserRegistrationSerializer):
+    hospital = serializers.PrimaryKeyRelatedField(queryset=Hospital.objects.all(), read_only=False, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'password',
+            'role',
+            'first_name',
+            'last_name',
+            'address',
+            'contact',
+            'hospital',
+            'speciality',
+            'pincode',
+        )
+
+class UserPatientSerializer(UserRegistrationSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'password',
+            'role',
+            'first_name',
+            'last_name',
+            'address',
+            'contact',
+            'pincode',
+        )
+
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
