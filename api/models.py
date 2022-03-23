@@ -9,6 +9,14 @@ from django.utils import timezone
 from .managers import CustomUserManager
 
 # Create your models here.
+class Hospital(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=200)
+    pincode = models.CharField(max_length=6)
+
+    def __str__(self):
+        return self.name
+
 class User(AbstractBaseUser, PermissionsMixin):
 
     # These fields tie to the roles!
@@ -30,17 +38,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, blank=True, null=True, default=3)
 
-    # Might include these fields later
+    # Non admin details
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
-    created_date = models.DateTimeField(default=timezone.now)
-    modified_date = models.DateTimeField(default=timezone.now)
-    created_by = models.EmailField()
-    modified_by = models.EmailField()
+    contact = models.CharField(max_length=12, blank=True, null=True, default='123')
+    address = models.CharField(max_length=200, blank=True, null=True, default='india')
+    pincode = models.CharField(max_length=50, blank=True, null=True, default='202001')
     
+    # Doctor fields
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='hospital', blank=True, null=True)
+    speciality = models.CharField(max_length=50, blank=True, null=True)
+
+
+
+
+
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -49,13 +65,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class Hospital(models.Model):
-    name = models.CharField(max_length=100)
-    address = models.CharField(max_length=200)
-    pincode = models.CharField(max_length=6)
-
-    def __str__(self):
-        return self.name
 
 class Appointment(models.Model):
 
