@@ -29,6 +29,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         (DOCTOR, 'Doctor'),
         (PATIENT, 'Patient')
     )
+
+    PENDING = 1
+    ACCEPT = 0
+
+    STATUS_CHOICES = (
+        (PENDING, 'Pending'),
+        (ACCEPT, 'Accept')
+    )
     
     class Meta:
         verbose_name = 'user'
@@ -42,7 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
+    pending = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, blank=True, null=True, default=0)
     is_deleted = models.BooleanField(default=False)
     contact = models.CharField(max_length=12, blank=True, null=True, default='123')
     address = models.CharField(max_length=200, blank=True, null=True, default='india')
@@ -51,10 +59,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Doctor fields
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='hospital', blank=True, null=True)
     speciality = models.CharField(max_length=50, blank=True, null=True)
-
-
-
-
 
 
     USERNAME_FIELD = 'email'
