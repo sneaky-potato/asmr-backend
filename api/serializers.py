@@ -32,6 +32,7 @@ class UserDoctorSerializer(UserRegistrationSerializer):
     class Meta:
         model = User
         fields = (
+            'id',
             'email',
             'password',
             'role',
@@ -42,6 +43,7 @@ class UserDoctorSerializer(UserRegistrationSerializer):
             'hospital',
             'speciality',
             'pincode',
+            'pending',
         )
 
 class UserPatientSerializer(UserRegistrationSerializer):
@@ -49,6 +51,7 @@ class UserPatientSerializer(UserRegistrationSerializer):
     class Meta:
         model = User
         fields = (
+            'id',
             'email',
             'password',
             'role',
@@ -99,13 +102,35 @@ class UserLoginSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid login credentials")
 
-class UserListSerializer(serializers.ModelSerializer):
+class DoctorListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
             'id',
             'email',
-            'role'
+            'first_name',
+            'last_name',
+            'address',
+            'contact',
+            'hospital',
+            'speciality',
+            'pincode',
+        )
+
+class DoctorListAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'address',
+            'contact',
+            'hospital',
+            'speciality',
+            'pincode',
+            'pending',
         )
 
 class HospitalListSerializer(serializers.ModelSerializer):
