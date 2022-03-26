@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import exceptions
 
+from django.db.models import Q
+
 from .permissions import (
     IsAuthenticatedOrPostOnly,
 )
@@ -16,6 +18,7 @@ from .serializers import (
     UserLoginSerializer,
     DoctorListSerializer,
     DoctorListAdminSerializer,
+    PatientListSerializer,
     HospitalListSerializer,
     AppointmentListSerializer,
 )
@@ -156,6 +159,27 @@ class DoctorListView(APIView):
         else: 
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
+class PatientListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if user.role != 3:
+            users = User.objects.all().filter(role=3)
+            serializer = PatientListSerializer(users, many=True)
+            response = {
+                'success': True,
+                'status_code': status.HTTP_200_OK,
+                'message': 'Successfully fetched patients',
+                'patients': serializer.data
+
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        else: 
+            return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+
+
 class UserEditView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -233,9 +257,10 @@ class AppointmentListView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request):
+        user = request.user
         print("Entering view get request")
-        appointments = Appointment.objects.all()
-        serializer = self.serializer_class(appointments, many=True)
+        appointments = Appointment.objects.all().filter(Q(patient_id=user.id) | Q(doctor_id=user.id))
+        serializer = AppointmentListSerializer(appointments, many=True)
         status_code = status.HTTP_200_OK
 
         response = {
@@ -248,7 +273,7 @@ class AppointmentListView(APIView):
 
     def post(self, request):
         print("Entering views post request")
-
+        print("request =", request.data)
         serializer = self.serializer_class(data=request.data)
         valid = serializer.is_valid(raise_exception=True)
 

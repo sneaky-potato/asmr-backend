@@ -1,4 +1,3 @@
-from email.policy import default
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -123,6 +122,7 @@ class DoctorListAdminSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'email',
+            'password',
             'first_name',
             'last_name',
             'address',
@@ -131,6 +131,19 @@ class DoctorListAdminSerializer(serializers.ModelSerializer):
             'speciality',
             'pincode',
             'pending',
+        )
+
+class PatientListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'address',
+            'contact',
+            'pincode',
         )
 
 class HospitalListSerializer(serializers.ModelSerializer):
@@ -156,10 +169,11 @@ class AppointmentListSerializer(serializers.ModelSerializer):
             'patient_id', 
             'description',
             'status',
+            'date',
         )
 
     def create(self, validated_data):
         print("Entering serializer create request")
         print("validated data =", validated_data)
-        appointment = Appointment.objects.create(doctor=validated_data['doctor_id'], patient=validated_data['patient_id'], description=validated_data['description'], status=validated_data['status'])
+        appointment = Appointment.objects.create(doctor=validated_data['doctor_id'], patient=validated_data['patient_id'], description=validated_data['description'], status=2, date=validated_data['date'])
         return appointment
