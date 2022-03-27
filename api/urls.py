@@ -18,7 +18,6 @@ urlpatterns = [
     path('register', AuthUserRegistrationView.as_view(), name='register'),
     path('login', AuthUserLoginView.as_view(), name='login'),
 
-    # path('ping', Ping.as_view(), name='ping'),
     path('me', MeView.as_view(), name='me'),
 
     path('doctors', DoctorListView.as_view(), name='doctors'),

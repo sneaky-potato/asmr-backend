@@ -53,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     pending = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, blank=True, null=True, default=0)
+    is_staff = models.BooleanField(default=False, verbose_name='staff account')
     is_deleted = models.BooleanField(default=False)
     contact = models.CharField(max_length=12, blank=True, null=True, default='123')
     address = models.CharField(max_length=200, blank=True, null=True, default='india')
