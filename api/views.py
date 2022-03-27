@@ -5,6 +5,12 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import exceptions
 
+from .mail import (
+    asmr_mail,
+    new_register_mail,
+    doctor_accepted,
+)
+
 from django.db.models import Q
 
 from .permissions import (
@@ -30,7 +36,6 @@ from .models import (
 )
 
 class AuthUserRegistrationView(APIView):
-    # serializer_class = UserRegistrationSerializer
     permission_classes = (permissions.AllowAny, )
 
     def post(self, request):
@@ -48,10 +53,18 @@ class AuthUserRegistrationView(APIView):
 
         valid = serializer.is_valid(raise_exception=True)
         print("request is =", valid)
-        if valid:
-            serializer.save()
+        if valid and role != 1:
             status_code = status.HTTP_201_CREATED
 
+            asmr_mail(
+                "Welcome to OMCS!", 
+                new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
+                request.data['email']
+            )
+            print("mail sent")
+
+            serializer.save()
+            
             response = {
                 'success': True,
                 'statusCode': status_code,
@@ -67,30 +80,33 @@ class AuthUserLoginView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
+        user = User.objects.get(email=request.data['email'])
         valid = serializer.is_valid(raise_exception=True)
 
         if valid:
-            status_code = status.HTTP_200_OK
+            if user.role != 3 and user.pending == 0:
+                status_code = status.HTTP_200_OK
 
-            response = {
-                'success': True,
-                'statusCode': status_code,
-                'message': 'User logged in successfully',
-                'access': serializer.data['access'],
-                'refresh': serializer.data['refresh'],
-                'authenticatedUser': {
-                    'email': serializer.data['email'],
-                    'role': serializer.data['role']
+                response = {
+                    'success': True,
+                    'statusCode': status_code,
+                    'message': 'User logged in successfully',
+                    'access': serializer.data['access'],
+                    'refresh': serializer.data['refresh'],
+                    'authenticatedUser': {
+                        'email': serializer.data['email'],
+                        'role': serializer.data['role']
+                    }
                 }
-            }
 
-            return Response(response, status=status_code)    
+                return Response(response, status=status_code)    
+            else:
+                return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 class Ping(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # print(request.headers.get('Authorization'))
         try: 
             response = {
                 'success': True,
@@ -202,6 +218,12 @@ class UserEditView(APIView):
             valid = serializer.is_valid(raise_exception=True)
             print("request is =", valid)
             if valid:
+                if(user.pending != userCreate.pending and user.pending):
+                    asmr_mail(
+                        "OMCS acceptance letter",
+                        doctor_accepted(user),
+                        [user.email]
+                    )
                 serializer.save()
                 status_code = status.HTTP_201_CREATED
 
