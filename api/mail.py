@@ -26,3 +26,11 @@ def doctor_accepted(user):
     message += "Hope you have a nice time using our service\n\n"
     message += "Thanks and regards\nASMR Team"
     return message
+
+def doctor_removed(user):
+    message = "Hi " + user   + ",\nYou've been removed from the ASMR Online Medical COnsulation Service.\n"
+    message += "You account has been deleted by the admin, please register again and contact teh amdin to login and use the service\n"
+
+    message += "Hope you have a nice time using our service\n\n"
+    message += "Thanks and regards\nASMR Team"
+    return message

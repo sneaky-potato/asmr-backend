@@ -77,10 +77,12 @@ class Appointment(models.Model):
 
     DONE = 1
     PENDING = 2
+    REJECT = 3
 
     STATUS_CHOICES = (
         (DONE, 'done'),
         (PENDING, 'pending'),
+        (REJECT, 'reject')
     )
 
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor')

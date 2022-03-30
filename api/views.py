@@ -9,6 +9,7 @@ from .mail import (
     asmr_mail,
     new_register_mail,
     doctor_accepted,
+    doctor_removed,
 )
 
 from django.db.models import Q
@@ -56,11 +57,11 @@ class AuthUserRegistrationView(APIView):
         if valid and role != 1:
             status_code = status.HTTP_201_CREATED
 
-            asmr_mail(
-                "Welcome to OMCS!", 
-                new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
-                request.data['email']
-            )
+            # asmr_mail(    
+            #     "Welcome to OMCS!", 
+            #     new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
+            #     request.data['email']
+            # )
             print("mail sent")
 
             serializer.save()
@@ -84,7 +85,7 @@ class AuthUserLoginView(APIView):
         valid = serializer.is_valid(raise_exception=True)
 
         if valid:
-            if user.role != 3 and user.pending == 0:
+            if not (user.role == 2 and user.pending == 1):
                 status_code = status.HTTP_200_OK
 
                 response = {
@@ -221,7 +222,7 @@ class UserEditView(APIView):
                 if(user.pending != userCreate.pending and user.pending):
                     asmr_mail(
                         "OMCS acceptance letter",
-                        doctor_accepted(user),
+                        doctor_accepted(user['first_name'] + " " + user['last_name']),
                         [user.email]
                     )
                 serializer.save()
@@ -237,6 +238,28 @@ class UserEditView(APIView):
                 return Response(response, status=status_code)
         else:
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def delete(self, request, pk):
+        user = request.user
+        try:
+            userCreate = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise exceptions.NotFound("User does not exist", code=status.HTTP_404_NOT_FOUND)
+
+        if(user.role == 1):
+            userCreate.delete()
+            status_code = status.HTTP_200_OK
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'User successfully deleted',
+                # 'user': serializer.data
+            }
+            return Response(response, status=status_code)
+        else:
+            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+    
+
 
 
 class HospitalListView(APIView):
