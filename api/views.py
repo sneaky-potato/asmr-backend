@@ -5,6 +5,15 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import exceptions
 
+from .mail import (
+    asmr_mail,
+    new_register_mail,
+    doctor_accepted,
+    doctor_removed,
+)
+
+from django.db.models import Q
+
 from .permissions import (
     IsAuthenticatedOrPostOnly,
 )
@@ -16,6 +25,7 @@ from .serializers import (
     UserLoginSerializer,
     DoctorListSerializer,
     DoctorListAdminSerializer,
+    PatientListSerializer,
     HospitalListSerializer,
     AppointmentListSerializer,
 )
@@ -27,7 +37,6 @@ from .models import (
 )
 
 class AuthUserRegistrationView(APIView):
-    # serializer_class = UserRegistrationSerializer
     permission_classes = (permissions.AllowAny, )
 
     def post(self, request):
@@ -45,10 +54,18 @@ class AuthUserRegistrationView(APIView):
 
         valid = serializer.is_valid(raise_exception=True)
         print("request is =", valid)
-        if valid:
-            serializer.save()
+        if valid and role != 1:
             status_code = status.HTTP_201_CREATED
 
+            # asmr_mail(    
+            #     "Welcome to OMCS!", 
+            #     new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
+            #     request.data['email']
+            # )
+            print("mail sent")
+
+            serializer.save()
+            
             response = {
                 'success': True,
                 'statusCode': status_code,
@@ -64,30 +81,33 @@ class AuthUserLoginView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
+        user = User.objects.get(email=request.data['email'])
         valid = serializer.is_valid(raise_exception=True)
 
         if valid:
-            status_code = status.HTTP_200_OK
+            if not (user.role == 2 and user.pending == 1):
+                status_code = status.HTTP_200_OK
 
-            response = {
-                'success': True,
-                'statusCode': status_code,
-                'message': 'User logged in successfully',
-                'access': serializer.data['access'],
-                'refresh': serializer.data['refresh'],
-                'authenticatedUser': {
-                    'email': serializer.data['email'],
-                    'role': serializer.data['role']
+                response = {
+                    'success': True,
+                    'statusCode': status_code,
+                    'message': 'User logged in successfully',
+                    'access': serializer.data['access'],
+                    'refresh': serializer.data['refresh'],
+                    'authenticatedUser': {
+                        'email': serializer.data['email'],
+                        'role': serializer.data['role']
+                    }
                 }
-            }
 
-            return Response(response, status=status_code)    
+                return Response(response, status=status_code)    
+            else:
+                return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 class Ping(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # print(request.headers.get('Authorization'))
         try: 
             response = {
                 'success': True,
@@ -156,6 +176,27 @@ class DoctorListView(APIView):
         else: 
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
+class PatientListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if user.role != 3:
+            users = User.objects.all().filter(role=3)
+            serializer = PatientListSerializer(users, many=True)
+            response = {
+                'success': True,
+                'status_code': status.HTTP_200_OK,
+                'message': 'Successfully fetched patients',
+                'patients': serializer.data
+
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        else: 
+            return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+
+
 class UserEditView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -178,6 +219,12 @@ class UserEditView(APIView):
             valid = serializer.is_valid(raise_exception=True)
             print("request is =", valid)
             if valid:
+                if(user.pending != userCreate.pending and user.pending):
+                    asmr_mail(
+                        "OMCS acceptance letter",
+                        doctor_accepted(user['first_name'] + " " + user['last_name']),
+                        [user.email]
+                    )
                 serializer.save()
                 status_code = status.HTTP_201_CREATED
 
@@ -191,6 +238,28 @@ class UserEditView(APIView):
                 return Response(response, status=status_code)
         else:
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def delete(self, request, pk):
+        user = request.user
+        try:
+            userCreate = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise exceptions.NotFound("User does not exist", code=status.HTTP_404_NOT_FOUND)
+
+        if(user.role == 1):
+            userCreate.delete()
+            status_code = status.HTTP_200_OK
+            response = {
+                'success': True,
+                'statusCode': status_code,
+                'message': 'User successfully deleted',
+                # 'user': serializer.data
+            }
+            return Response(response, status=status_code)
+        else:
+            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+    
+
 
 
 class HospitalListView(APIView):
@@ -233,9 +302,10 @@ class AppointmentListView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request):
+        user = request.user
         print("Entering view get request")
-        appointments = Appointment.objects.all()
-        serializer = self.serializer_class(appointments, many=True)
+        appointments = Appointment.objects.all().filter(Q(patient_id=user.id) | Q(doctor_id=user.id))
+        serializer = AppointmentListSerializer(appointments, many=True)
         status_code = status.HTTP_200_OK
 
         response = {
@@ -248,7 +318,7 @@ class AppointmentListView(APIView):
 
     def post(self, request):
         print("Entering views post request")
-
+        print("request =", request.data)
         serializer = self.serializer_class(data=request.data)
         valid = serializer.is_valid(raise_exception=True)
 

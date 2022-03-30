@@ -126,6 +126,8 @@ dbuser = os.getenv("DATABASE_USER")
 dbpasswd = os.getenv("DATABASE_PASSWORD")
 dbhost = os.getenv("DATABASE_HOST")
 dbport = os.getenv("DATABASE_PORT")
+emailadd = os.getenv("EMAIL_ADDRESS")
+emailpasswd = os.getenv("EMAIL_PASSWORD")
 
 # DATABASES = {
 #    'default': {
@@ -205,3 +207,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = emailadd
+EMAIL_HOST_PASSWORD = emailpasswd
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False

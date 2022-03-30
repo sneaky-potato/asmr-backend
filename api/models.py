@@ -6,6 +6,8 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.utils import timezone
 
+import datetime
+
 from .managers import CustomUserManager
 
 # Create your models here.
@@ -51,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     pending = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, blank=True, null=True, default=0)
+    is_staff = models.BooleanField(default=False, verbose_name='staff account')
     is_deleted = models.BooleanField(default=False)
     contact = models.CharField(max_length=12, blank=True, null=True, default='123')
     address = models.CharField(max_length=200, blank=True, null=True, default='india')
@@ -74,16 +77,19 @@ class Appointment(models.Model):
 
     DONE = 1
     PENDING = 2
+    REJECT = 3
 
     STATUS_CHOICES = (
         (DONE, 'done'),
         (PENDING, 'pending'),
+        (REJECT, 'reject')
     )
 
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor')
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient')
     description = models.CharField(max_length=100)
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, blank=True, null=True, default=2)
+    date = models.DateField(default=datetime.date.today)
 
     def __str__(self):
         return self.description
