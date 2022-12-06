@@ -57,11 +57,11 @@ class AuthUserRegistrationView(APIView):
         if valid and role != 1:
             status_code = status.HTTP_201_CREATED
 
-            # asmr_mail(    
-            #     "Welcome to OMCS!", 
-            #     new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
-            #     request.data['email']
-            # )
+            asmr_mail(    
+                "Welcome to OMCS!", 
+                new_register_mail(request.data['first_name'] + " " + request.data['last_name'], role), 
+                request.data['email']
+            )
             print("mail sent")
 
             serializer.save()
