@@ -30,7 +30,8 @@ SECRET_KEY = 'django-insecure-sj+a#o@^urkc@m&kpew9&60r4x4q$gciot8kv$(1xl33pp@*+!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
+
 
 
 # Application definition
@@ -114,31 +115,29 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 dbname = os.getenv("DATABASE_NAME")
 dbuser = os.getenv("DATABASE_USER")
 dbpasswd = os.getenv("DATABASE_PASSWORD")
 dbhost = os.getenv("DATABASE_HOST")
 dbport = os.getenv("DATABASE_PORT")
-emailadd = os.getenv("EMAIL_ADDRESS")
-emailpasswd = os.getenv("EMAIL_PASSWORD")
 
-# DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql',
-#        'NAME': dbname,
-#        'USER': dbuser,
-#        'PASSWORD': dbpasswd,
-#        'HOST': dbhost,
-#        'PORT': dbport,
-#    }
-# }
+DATABASES = {
+   'default': {
+       'ENGINE': 'django.db.backends.postgresql',
+       'NAME': dbname,
+       'USER': dbuser,
+       'PASSWORD': dbpasswd,
+       'HOST': dbhost,
+       'PORT': dbport,
+   }
+}
 
 
 # Password validation
@@ -209,10 +208,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.mailgun.org'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = emailadd
-EMAIL_HOST_PASSWORD = emailpasswd
+EMAIL_HOST_USER = os.getenv('EMAIL_ADDRESS')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
